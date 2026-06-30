@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrolling Arcade Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            background-color: #000;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game variables
+        let playerX = 350;
+        let playerY = 550;
+        let playerSpeed = 10;
+        let playerWidth = 40;
+        let playerHeight = 40;
+
+        let projectiles = [];
+        const projectileSpeed = 20;
+        const projectileWidth = 10;
+        const projectileHeight = 30;
+
+        let targets = [];
+        const targetCount = 5;
+        const targetSpeed = 2;
+        const targetWidth = 60;
+        const targetHeight = 40;
+
+        let score = 0;
+        let gameOver = false;
+
+        // Function to draw the player
+        function drawPlayer() {
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
+        }
+
+        // Function to draw projectiles
+        function drawProjectiles() {
+            projectiles.forEach(projectile => {
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(projectile.x, projectile.y, projectile.width, projectile.height);
+            });
+        }
+
+        // Function to draw targets
+        function drawTargets() {
+            targets.forEach(target => {
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(target.x, target.y, target.width, target.height);
+            });
+        }
+
+        // Function to update the game state
+        function updateGame() {
+            if (gameOver) return;
+
+            // Move player
+            if (keys.left && playerX > 0) playerX -= playerSpeed;
+            if (keys.right && playerX < canvas.width - playerWidth) playerX += playerSpeed;
+
+            // Shoot projectile
+            if (keys.space && projectiles.length === 0) {
+                projectiles.push({ x: playerX + playerWidth / 2, y: playerY });
+            }
+
+            // Move projectiles
+            projectiles.forEach((projectile, index) => {
+                projectile.y -= projectileSpeed;
+                if (projectile.y < 0) projectiles.splice(index, 1);
+            });
+
+            // Spawn targets
+            if (targets.length < targetCount && Math.random() > 0.95) {
+                const x = Math.random() * canvas.width;
+                targets.push({ x, y: 0, width: targetWidth, height: targetHeight });
+            }
+
+            // Move targets
+            targets.forEach(target => {
+                target.y += targetSpeed;
+                if (target.y > canvas.height) {
+                    targets.splice(targets.indexOf(target), 1);
+                }
+            });
+
+            // Check for collisions between projectiles and targets
+            projectiles.forEach((projectile, index) => {
+                targets.forEach((target, targetIndex) => {
+                    if (
+                        projectile.x >= target.x && projectile.x <= target.x + targetWidth &&
+                        projectile.y >= target.y && projectile.y <= target.y + targetHeight
+                    ) {
+                        score += 10;
+                        projectiles.splice(index, 1);
+                        targets.splice(targetIndex, 1);
+                    }
+                });
+            });
+
+            // Check for collision between player and targets
+            if (
+                targets.some(target => {
+                    return (
+                        playerX >= target.x && playerX <= target.x + targetWidth &&
+                        playerY >= target.y && playerY <= target.y + targetHeight
+                    );
+                })
+            ) {
+                gameOver = true;
+            }
+        }
+
+        // Function to render the game
+        function renderGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            drawProjectiles();
+            drawTargets();
+            ctx.fillStyle = '#fff';
+            ctx.font = '24px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 30);
+        }
+
+        // Function to handle key presses
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            delete keys[e.key];
+        });
+
+        // Game loop
+        function gameLoop() {
+            updateGame();
+            renderGame();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game
+        gameLoop();
+    </script>
+</body>
+</html>
