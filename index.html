@@ -140,10 +140,14 @@
         // Function to handle key presses
         const keys = {};
         window.addEventListener('keydown', (e) => {
-            keys[e.key] = true;
+            if (e.key === 'ArrowLeft' || e.key === 'A') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'D') keys.right = true;
+            if (e.key === ' ') keys.space = true;
         });
         window.addEventListener('keyup', (e) => {
-            delete keys[e.key];
+            if (e.key === 'ArrowLeft' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'D') keys.right = false;
+            if (e.key === ' ') keys.space = false;
         });
 
         // Game loop
